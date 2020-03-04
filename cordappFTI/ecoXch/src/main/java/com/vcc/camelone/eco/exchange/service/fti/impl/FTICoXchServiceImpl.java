@@ -59,7 +59,7 @@ import com.vcc.camelone.eco.exchange.source.fti.model.CertificateOfOrigin.Issuer
 import com.vcc.camelone.eco.exchange.util.EntityUtil;
 import com.vcc.camelone.eco.exchange.util.EntityXMLValidationHandler;
 
-/*
+
 import oasis.names.specification.ubl.schema.xsd.certificateoforigin_21.CertificateOfOriginType;
 import oasis.names.specification.ubl.schema.xsd.commonaggregatecomponents_21.AddressLineType;
 import oasis.names.specification.ubl.schema.xsd.commonaggregatecomponents_21.AddressType;
@@ -86,7 +86,7 @@ import oasis.names.specification.ubl.schema.xsd.commonbasiccomponents_21.NameTyp
 import oasis.names.specification.ubl.schema.xsd.commonbasiccomponents_21.RemarksType;
 import oasis.names.specification.ubl.schema.xsd.commonbasiccomponents_21.RoleCodeType;
 import oasis.names.specification.ubl.schema.xsd.commonbasiccomponents_21.TransportModeCodeType;
-*/
+
 
 /**
  * @author User

@@ -23,7 +23,26 @@ sourceSets {
     }
 }
 
+
+repositories {
+    mavenCentral()
+    jcenter()
+    maven {
+        url 'https://ci-artifactory.corda.r3cev.com/artifactory/corda-releases'
+    }
+    mavenLocal()
+}
+
 dependencies {
     // Corda dependencies.
     cordaCompile "$corda_release_group:corda-core:$corda_release_version"
+    // cordaCompile "com.helger:ph-ubl21:6.2.0"
+    //cordaCompile group:'com.helger', name: 'ph-ubl21', version: '6.1.1'
+    cordaCompile('com.helger:ph-ubl21:6.1.1') {
+        exclude group: 'com.helger', module: 'ph-jaxb-pom'
+        exclude group: 'org.glassfish.jaxb', module: 'jaxb-bom'
+    }
+
+    cordaCompile group:'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.1.4'
+    cordaCompile group:'commons-io', name: 'commons-io', version: '2.5'
 }

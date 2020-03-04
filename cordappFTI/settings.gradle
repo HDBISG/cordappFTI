@@ -1,5 +1,6 @@
 include 'contracts-java'
 include 'workflows-java'
-include 'contracts-kotlin'
+// include 'contracts-kotlin'
+include 'ecoXch'
 //include 'workflows-kotlin'
 include 'clients'

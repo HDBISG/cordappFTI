@@ -47,7 +47,7 @@ dependencies {
 
     cordapp project(":contracts-java")
     cordapp project(":workflows-java")
-    cordapp project(":contracts-kotlin")
+//    cordapp project(":contracts-kotlin")
 //    cordapp project(":workflows-kotlin")
 }
 
