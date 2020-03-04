@@ -5,6 +5,7 @@ package com.vcc.camelone.eco.exchange.service.fti.impl;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.io.StringReader;
 import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -13,6 +14,8 @@ import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Optional;
 
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.Unmarshaller;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.transform.Transformer;
@@ -106,6 +109,63 @@ public class FTICoXchServiceImpl implements IFTI {
 	
 	// Interface Method
 	///////////////////
+
+	public void validFTIxmlFormat( String ftiStr )  throws Exception {
+
+		EntityXMLValidationHandler handler = new EntityXMLValidationHandler();
+
+		InputStream isCoXml = new ByteArrayInputStream(ftiStr.getBytes());
+		boolean bValidate = EntityUtil.validateXMLEntity(
+				com.vcc.camelone.eco.exchange.source.fti.model.CertificateOfOrigin.class, FTI_CO_XSD, handler,
+				isCoXml);
+		if (!bValidate) {
+			StringBuffer sbValidation = new StringBuffer();
+			handler.getEvents().stream().forEach(validationEvent -> {
+				sbValidation.append(validationEvent.getMessage() + "\t\n");
+			});
+			throw new Exception("Validation: " + sbValidation.toString());
+		}
+	}
+
+	public CertificateOfOrigin convertToObj( String ftiStr )  throws Exception {
+
+		JAXBContext jaxbContext;
+		jaxbContext = JAXBContext.newInstance(CertificateOfOrigin.class);
+		Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+
+		CertificateOfOrigin certificateOfOrigin = (CertificateOfOrigin) jaxbUnmarshaller.unmarshal(new StringReader( ftiStr ));
+
+		return certificateOfOrigin;
+	}
+	public String convertToUblStr( CertificateOfOrigin  certificateOfOrigin )  throws Exception {
+
+
+		//String coXml = EntityUtil.entityToXML(certificateOfOrigin);
+		//log.info("coXml=" + coXml );
+
+
+		CertificateOfOriginType ublCo = convertToUBL(certificateOfOrigin);
+		log.info("================"  );
+		//log.info("ublCo=" + EntityUtil.entityToXML( ublCo ) );
+
+		IErrorList ublCoValidateErrors = UBL21Validator.certificateOfOrigin().validate(ublCo);
+		if (ublCoValidateErrors.size() > 0) {
+			StringBuffer sbValidationErrors = new StringBuffer();
+			for (IError ublCoValidateError : ublCoValidateErrors) {
+				sbValidationErrors.append(ublCoValidateError.getLinkedExceptionMessage() +"\t\n");
+			}
+			throw new Exception(sbValidationErrors.toString());
+		}
+
+		Document doc = UBL21Writer.certificateOfOrigin().getAsDocument(ublCo);
+		StringWriter writer = new StringWriter();
+		Transformer transformer = TransformerFactory.newInstance().newTransformer();
+		transformer.transform(new DOMSource(doc), new StreamResult(writer));
+		String ublXmlCO = writer.getBuffer().toString();
+
+		return ublXmlCO;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -113,48 +173,16 @@ public class FTICoXchServiceImpl implements IFTI {
 	 * camelone.eco.exchange.source.fti.model.CertificateOfOrigin)
 	 */
 	@Override
-	public ServiceStatus distributeCO(CertificateOfOrigin certificateOfOrigin) {
-		// TODO Auto-generated method stub
+	public ServiceStatus distributeCO( String ftiStr ) {
 
 		ServiceStatus serviceStatus = new ServiceStatus();
-		EntityXMLValidationHandler handler = new EntityXMLValidationHandler();
 		try {
-			if (null == certificateOfOrigin)
-				throw new Exception("param certificateOfOrigin null");
 
-			String coXml = EntityUtil.entityToXML(certificateOfOrigin);
-			log.info("coXml=" + coXml );
-			
-			InputStream isCoXml = new ByteArrayInputStream(coXml.getBytes());
-			boolean bValidate = EntityUtil.validateXMLEntity(
-					com.vcc.camelone.eco.exchange.source.fti.model.CertificateOfOrigin.class, FTI_CO_XSD, handler,
-					isCoXml);
-			if (!bValidate) {
-				StringBuffer sbValidation = new StringBuffer();
-				handler.getEvents().stream().forEach(validationEvent -> {
-					sbValidation.append(validationEvent.getMessage() + "\t\n");
-				});
-				throw new Exception("Validation: " + sbValidation.toString());
-			}
+			this.validFTIxmlFormat( ftiStr );
 
-			CertificateOfOriginType ublCo = convertToUBL(certificateOfOrigin);
-			log.info("================"  );
-			//log.info("ublCo=" + EntityUtil.entityToXML( ublCo ) );
-			
-			IErrorList ublCoValidateErrors = UBL21Validator.certificateOfOrigin().validate(ublCo);
-			if (ublCoValidateErrors.size() > 0) {
-				StringBuffer sbValidationErrors = new StringBuffer();
-				for (IError ublCoValidateError : ublCoValidateErrors) {
-					sbValidationErrors.append(ublCoValidateError.getLinkedExceptionMessage() +"\t\n");
-				}
-				throw new Exception(sbValidationErrors.toString());
-			}
+			CertificateOfOrigin certificateOfOrigin = convertToObj(  ftiStr );
 
-			Document doc = UBL21Writer.certificateOfOrigin().getAsDocument(ublCo);
-			StringWriter writer = new StringWriter();
-			Transformer transformer = TransformerFactory.newInstance().newTransformer();
-			transformer.transform(new DOMSource(doc), new StreamResult(writer));
-			String ublXmlCO = writer.getBuffer().toString();
+			String ublXmlCO = convertToUblStr( certificateOfOrigin );
 			
 			// Consignee/Importer Id
 			Optional<PartyIdentification> opImporterPartyId = Optional

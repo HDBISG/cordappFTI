@@ -3,6 +3,9 @@ package com.vcc.corda.eco.flow;
 import co.paralleluniverse.fibers.Suspendable;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.vcc.camelone.eco.exchange.service.fti.IFTI;
+import com.vcc.camelone.eco.exchange.service.fti.impl.FTICoXchServiceImpl;
+import com.vcc.camelone.eco.exchange.source.fti.model.CertificateOfOrigin;
 import com.vcc.corda.eco.state.EcoState;
 import net.corda.core.contracts.ContractState;
 import net.corda.core.flows.*;
@@ -51,12 +54,28 @@ public class EcoIssueFlowResponder extends FlowLogic<Void> {
         logger.info("before ReceiveFinalityFlow()"  );
         subFlow(new ReceiveFinalityFlow(otherSide, signedTransaction.getId()));
 
+        ContractState output = signedTransaction.getTx().getOutputs().get(0).getData();
+        EcoState ecoState = (EcoState) output;
+        String ftiXml = ecoState.getEcoContent();
 
+        logger.info("ftiXml=" + (ftiXml==null?ftiXml:ftiXml.length()) );
+
+        IFTI ecoXch = new FTICoXchServiceImpl();
+        try {
+            CertificateOfOrigin ftiCO = ecoXch.convertToObj( ftiXml );
+            String ublCOstr = ecoXch.convertToUblStr(ftiCO  );
+            logger.info("ublCOstr=" + (ublCOstr==null?ublCOstr:ublCOstr.length()) );
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         logger.info("end ReceiveFinalityFlow()"  );
 
         return null;
     }
+
+
 
 /*    private void callGateWay() throws FlowException {
 

@@ -62,6 +62,7 @@ dependencies {
 
     // CorDapp dependencies.
     cordapp project(":contracts-java")
+    cordapp project(":ecoXch")
 }
 
 task integrationTest(type: Test, dependsOn: []) {
@@ -72,6 +73,7 @@ task integrationTest(type: Test, dependsOn: []) {
 task deployNodes(type: Cordform, dependsOn: ['jar']) {
     nodeDefaults {
         cordapp project(":contracts-java")
+        cordapp project(":ecoXch")
     }
 
     node {
@@ -86,7 +88,7 @@ task deployNodes(type: Cordform, dependsOn: ['jar']) {
             deploy = false
         }
         cordapps.clear()
-
+/*
         extraConfig = [
                 dataSourceProperties: [
                         dataSourceClassName: 'org.postgresql.ds.PGSimpleDataSource',
@@ -100,7 +102,7 @@ task deployNodes(type: Cordform, dependsOn: ['jar']) {
                         transactionIsolationLevel: 'READ_COMMITTED'
                         //,initialiseSchema: 'true'
                 ],
-        ]
+        ]*/
     }
     node {
         name "O=FTI,L=Bangkok,C=TH"
@@ -110,7 +112,7 @@ task deployNodes(type: Cordform, dependsOn: ['jar']) {
             adminAddress("localhost:10006")
         }
         rpcUsers = [[user: "user1", "password": "test", "permissions": ["ALL"]]]
-        extraConfig = [
+/*        extraConfig = [
                 dataSourceProperties: [
                         dataSourceClassName: 'org.postgresql.ds.PGSimpleDataSource',
                         dataSource         : [
@@ -123,7 +125,7 @@ task deployNodes(type: Cordform, dependsOn: ['jar']) {
                         transactionIsolationLevel: 'READ_COMMITTED'
                         //,initialiseSchema: 'true'
                 ],
-        ]
+        ]*/
     }
     node {
         name "O=VCC,L=Singapore,C=SG"
@@ -133,7 +135,7 @@ task deployNodes(type: Cordform, dependsOn: ['jar']) {
             adminAddress("localhost:10010")
         }
         rpcUsers = [[user: "user1", "password": "test", "permissions": ["ALL"]]]
-        extraConfig = [
+/*        extraConfig = [
                 dataSourceProperties: [
                         dataSourceClassName: 'org.postgresql.ds.PGSimpleDataSource',
                         dataSource         : [
@@ -146,7 +148,7 @@ task deployNodes(type: Cordform, dependsOn: ['jar']) {
                         transactionIsolationLevel: 'READ_COMMITTED'
                         //,initialiseSchema: 'true'
                 ],
-        ]
+        ]*/
     }
 
 }

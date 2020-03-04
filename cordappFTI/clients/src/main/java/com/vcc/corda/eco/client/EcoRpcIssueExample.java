@@ -1,5 +1,11 @@
 package com.vcc.corda.eco.client;
 
+import com.vcc.camelone.eco.exchange.service.fti.IFTI;
+import com.vcc.camelone.eco.exchange.service.fti.impl.FTICoXchServiceImpl;
+import com.vcc.camelone.eco.exchange.source.fti.model.CertificateOfOrigin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -8,7 +14,9 @@ import java.util.stream.Stream;
 
 public class EcoRpcIssueExample extends EcoRpc {
 
-    static String docNo = "docNo123A";
+    static String docNo = "docNo66";
+
+    private static final Logger logger = LoggerFactory.getLogger( EcoRpcIssueExample.class);
 
     public EcoRpcIssueExample(EcoRpcEnity rpcEnity ){
         super( rpcEnity );
@@ -21,10 +29,25 @@ public class EcoRpcIssueExample extends EcoRpc {
         rpcEnity.setPartA( "FTI", "Bangkok", "TH" );
         rpcEnity.setPartB( "VCC", "Singapore", "SG" );
 
-        String ecoExampleXML = getFileBody("D:\\FTI\\Sample.xml");
+        String ftiXml = getFileBody("D:\\FTI\\Sample.xml");
 
-        System.out.println( ecoExampleXML );
-        // new EcoRpcIssueExample( rpcEnity ).issueEco(docNo, ecoExampleXML );
+
+        logger.info("ftiXml=====" + (ftiXml==null?ftiXml:ftiXml.length()) );
+
+        IFTI ecoXch = new FTICoXchServiceImpl();
+        String ublCOstr = docNo+"___XML";
+
+        try {
+            CertificateOfOrigin ftiCO = ecoXch.convertToObj( ftiXml );
+            ublCOstr = ecoXch.convertToUblStr(ftiCO  );
+            logger.info("ublCOstr=====" + (ublCOstr==null?ublCOstr:ublCOstr.length()) );
+            // logger.info("ublCOstr=" +  ublCOstr );
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        new EcoRpcIssueExample( rpcEnity ).issueEco(docNo, ublCOstr );
     }
 
     //Read file content into string with - Files.lines(Path path, Charset cs)

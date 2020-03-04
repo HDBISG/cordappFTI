@@ -12,5 +12,9 @@ import com.vcc.camelone.eco.exchange.source.fti.model.CertificateOfOrigin;
  */
 public interface IFTI {
 
-	public ServiceStatus distributeCO(CertificateOfOrigin certificateOfOrigin);
+	public CertificateOfOrigin convertToObj( String ftiStr )  throws Exception ;
+
+	public String convertToUblStr( CertificateOfOrigin  certificateOfOrigin )  throws Exception ;
+
+	public ServiceStatus distributeCO(String ftiStr);
 }

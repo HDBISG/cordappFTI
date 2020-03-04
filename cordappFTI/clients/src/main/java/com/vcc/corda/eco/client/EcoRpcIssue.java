@@ -2,7 +2,7 @@ package com.vcc.corda.eco.client;
 
 public class EcoRpcIssue extends EcoRpc {
 
-    static String docNo = "docNo123B";
+    static String docNo = "docNo123r";
 
     public EcoRpcIssue( EcoRpcEnity rpcEnity ){
         super( rpcEnity );
