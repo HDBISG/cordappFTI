@@ -68,9 +68,17 @@ public class EcoFTIFlow {
 
             EcoState ecoState = new EcoState( fti, vcc, docNo, ecoContent, new UniqueIdentifier( docNo ) );
 
-            EcoWorkflowHelper ecoWorkflowHelper = new EcoWorkflowHelperFactory().getEcoWorkflowHelp( command );
+            EcoWorkflowHelperFactory factory = new EcoWorkflowHelperFactory();
+            EcoWorkflowHelper ecoWorkflowHelper = factory.getEcoWorkflowHelp( command );
             // We build our transaction.
-            TransactionBuilder transactionBuilder = ecoWorkflowHelper.getTransactionBuilder( command, notary, ecoState );
+            StateAndRef stateAndRef = ecoWorkflowHelper.getStateAndRef( refNo, getServiceHub() );
+            if ( stateAndRef != null ) {
+                ecoState = (EcoState) stateAndRef.getState().getData();
+            }
+            logger.info("stateAndRef=" + stateAndRef + " ecoState= " + ecoState );
+
+            TransactionBuilder transactionBuilder = ecoWorkflowHelper.getTransactionBuilder( command, notary, stateAndRef, ecoState );
+            logger.info("transactionBuilder=" + transactionBuilder );
 
             // We check our transaction is valid based on its contracts.
             transactionBuilder.verify(getServiceHub());
@@ -131,12 +139,12 @@ public class EcoFTIFlow {
                 @Override
                 protected void checkTransaction(SignedTransaction stx) throws FlowException {
                     // Implement responder flow transaction checks here
-                    ContractState output = stx.getTx().getOutputs().get(0).getData();
+/*                    ContractState output = stx.getTx().getOutputs().get(0).getData();
                     EcoState ecoState = (EcoState) output;
 
                     String ftiXml = ecoState.getEcoContent();
 
-                    logger.info("ftiXml=" + (ftiXml==null?ftiXml:ftiXml.length()) );
+                    logger.info("ftiXml=" + (ftiXml==null?ftiXml:ftiXml.length()) );*/
 
                 }
             });

@@ -1,10 +1,7 @@
 package com.vcc.corda.eco.client2;
 
-import com.vcc.corda.eco.client.EcoRpc;
-import com.vcc.corda.eco.client.EcoRpcEnity;
 import com.vcc.corda.eco.contract.EcoContract;
 import com.vcc.corda.eco.flow.EcoFTIFlow;
-import com.vcc.corda.eco.flow.EcoIssueFlowInitiator;
 import net.corda.client.rpc.CordaRPCClient;
 import net.corda.client.rpc.CordaRPCClientConfiguration;
 import net.corda.client.rpc.CordaRPCConnection;
@@ -18,9 +15,9 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ExecutionException;
 
-public class TestEcoWorkflow {
+public class TestEcoWorkflowIssue extends TestEcoWorkflow {
 
-    private static final Logger logger = LoggerFactory.getLogger( TestEcoWorkflow.class);
+    private static final Logger logger = LoggerFactory.getLogger( TestEcoWorkflowIssue.class);
 
     static EcoContract.Commands command;
     static String refNo;
@@ -32,7 +29,7 @@ public class TestEcoWorkflow {
     }
     public static void issue() throws ExecutionException, InterruptedException {
 
-        CordaRPCConnection connection = new TestEcoWorkflow().getConnection( "localhost:10005", "user1" , "test" );
+        CordaRPCConnection connection = new TestEcoWorkflowIssue().getConnection( "localhost:10005", "user1" , "test" );
         final CordaRPCOps proxy = connection.getProxy();
         try {
 
@@ -56,13 +53,5 @@ public class TestEcoWorkflow {
         System.out.println("end issue");
     }
 
-    private CordaRPCConnection getConnection( String rpcHostPort, String rpcUserName, String rpcPassword ) {
-        final NetworkHostAndPort nodeAddress = NetworkHostAndPort.parse( rpcHostPort );
 
-        final CordaRPCClient client = new CordaRPCClient(nodeAddress, CordaRPCClientConfiguration.DEFAULT);
-
-        final CordaRPCConnection connection = client.start( rpcUserName, rpcPassword );
-
-        return connection;
-    }
 }
