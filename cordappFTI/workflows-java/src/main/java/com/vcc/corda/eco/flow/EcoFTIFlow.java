@@ -1,7 +1,10 @@
 package com.vcc.corda.eco.flow;
 
 import co.paralleluniverse.fibers.Suspendable;
+import com.google.common.collect.ImmutableList;
 import com.vcc.corda.eco.contract.EcoContract;
+import com.vcc.corda.eco.flow.helper.EcoWorkflowHelper;
+import com.vcc.corda.eco.flow.helper.EcoWorkflowHelperFactory;
 import com.vcc.corda.eco.schema.EcoSchemaV1;
 import com.vcc.corda.eco.state.EcoState;
 import net.corda.core.contracts.*;
@@ -25,7 +28,7 @@ import java.util.stream.Collectors;
 
 import static java.util.Collections.singletonList;
 import static net.corda.core.node.services.vault.QueryCriteriaUtils.getField;
-/*
+
 public class EcoFTIFlow {
 
     @InitiatingFlow
@@ -33,20 +36,17 @@ public class EcoFTIFlow {
     public static class EcoFTIFlowInitiator extends FlowLogic<SignedTransaction> {
 
         private EcoContract.Commands command;
-        private final String refNo;
-        private final String docNo;
-        private EcoState newEcoState;
-
-        private Party fti;
-        private Party vcc;
+        private String refNo;
+        private String docNo;
+        private String ecoContent;
 
         private  final Logger logger = LoggerFactory.getLogger( EcoFTIFlowInitiator.class);
 
-        public EcoFTIFlowInitiator(EcoContract.Commands command, String refNo, String docNo, EcoState newEcoState  ) {
+        public EcoFTIFlowInitiator(EcoContract.Commands command, String refNo, String docNo, String ecoContent ) {
             this.command = command;
             this.refNo = refNo;
             this.docNo = docNo;
-            this.newEcoState = newEcoState;
+            this.ecoContent = ecoContent;
         }
 
         private final ProgressTracker progressTracker = new ProgressTracker();
@@ -59,39 +59,23 @@ public class EcoFTIFlow {
         @Suspendable
         @Override
         public SignedTransaction call() throws FlowException {
-
-            // 1. Retrieve the IOU State from the vault using LinearStateQueryCriteria
-            QueryCriteria generalCriteria = new QueryCriteria.VaultQueryCriteria(Vault.StateStatus.ALL);
-            FieldInfo attributeDocNo = null;
-            try {
-                attributeDocNo = getField("docNo", EcoSchemaV1.PersistentEco.class);
-            } catch (NoSuchFieldException e) {
-                e.printStackTrace();
-            }
-            //CriteriaExpression docNoIndex = Builder.like(attributeDocNo, "%");
-            CriteriaExpression docNoIndex = Builder.equal(attributeDocNo, oldDocNo );
-            QueryCriteria customCriteria = new QueryCriteria.VaultCustomQueryCriteria( docNoIndex );
-
-            // Vault.Page<EcoState> page =  proxy.vaultQueryByCriteria( customCriteria, EcoState.class );
-            Vault.Page<EcoState> page = getServiceHub().getVaultService().queryBy(EcoState.class, customCriteria);
-
-            // 2. Get a reference to the inputState data that we are going to settle.
-            StateAndRef inputStateAndRefToSettle = (StateAndRef) page.getStates().get(0);
-            // EcoState oldEcoState = (EcoState) ((StateAndRef) page.getStates().get(0)).getState().getData();
-
             // We choose our transaction's notary (the notary prevents double-spends).
             Party notary = getServiceHub().getNetworkMapCache().getNotaryIdentities().get(0);
             // We get a reference to our own identity.
-            fti = getOurIdentity();
-            /////////////////////////////////////////////////
-            vcc = this.findParty( "VCC", "SG" );
+            Party fti = getOurIdentity();
 
+            Party vcc = this.findParty( "VCC", "SG" );
 
-            TransactionBuilder transactionBuilder = getTransactionBuilder( notary );
+            EcoState ecoState = new EcoState( fti, vcc, docNo, ecoContent, new UniqueIdentifier( docNo ) );
 
-            logger.info("cancel Before initiateFlow()");
-            FlowSession session = initiateFlow( newEcoState.getVcc() );
+            EcoWorkflowHelper ecoWorkflowHelper = new EcoWorkflowHelperFactory().getEcoWorkflowHelp( command );
+            // We build our transaction.
+            TransactionBuilder transactionBuilder = ecoWorkflowHelper.getTransactionBuilder( command, notary, ecoState );
 
+            // We check our transaction is valid based on its contracts.
+            transactionBuilder.verify(getServiceHub());
+
+            FlowSession session = initiateFlow( ecoState.getVcc() );
 
             // We sign the transaction with our private key, making it immutable.
             logger.info("Before signInitialTransaction()");
@@ -106,45 +90,14 @@ public class EcoFTIFlow {
             return subFlow(new FinalityFlow(fullySignedTransaction, singletonList(session)));
         }
 
-        private TransactionBuilder getTransactionBuilder( Party notary )
-                throws TransactionResolutionException, TransactionVerificationException, AttachmentResolutionException {
 
-            if( command instanceof EcoContract.Commands.Issue ) {
-                // parse to UBL
-
-
-            } else if( command instanceof EcoContract.Commands.Replace ) {
-
-            } else if( command instanceof EcoContract.Commands.Cancel ) {
-
-            } else {
-                throw new IllegalArgumentException("Unrecognized command");
-            }
-            // We create our new TokenState.
-            final Command<EcoContract.Commands.Replace> txCommand = new Command<>(
-                    new EcoContract.Commands.Replace(),
-                    newEcoState.getParticipants()
-                            .stream().map(AbstractParty::getOwningKey)
-                            .collect(Collectors.toList()) );
-
-            // We build our transaction.
-            TransactionBuilder transactionBuilder = new TransactionBuilder( notary );
-            transactionBuilder.addCommand( txCommand );
-            transactionBuilder.addInputState(inputStateAndRefToSettle);
-            transactionBuilder.addOutputState( newEcoState, EcoContract.ID);
-
-            // We check our transaction is valid based on its contracts.
-            transactionBuilder.verify(getServiceHub());
-
-            return transactionBuilder;
-        }
 
         private Party findParty( String organisationName, String countryName ) {
             List<NodeInfo> nodeInfoList = getServiceHub().getNetworkMapCache().getAllNodes();
             for( NodeInfo node: nodeInfoList ) {
                 List<Party> partyList = node.getLegalIdentities();
                 for( Party party: partyList ) {
-                    if( organisationName.equalsIgnoreCase( party.getName().getOrganisation() ) {
+                    if( organisationName.equalsIgnoreCase( party.getName().getOrganisation() )) {
                         if( countryName == null || countryName.trim().length() == 0 ) {
                             return party;
                         } else if( countryName.equalsIgnoreCase( party.getName().getCountry())){
@@ -173,10 +126,17 @@ public class EcoFTIFlow {
         @Suspendable
         public Void call() throws FlowException {
             SignedTransaction signedTransaction = subFlow(new SignTransactionFlow(otherSide) {
+
                 @Suspendable
                 @Override
                 protected void checkTransaction(SignedTransaction stx) throws FlowException {
                     // Implement responder flow transaction checks here
+                    ContractState output = stx.getTx().getOutputs().get(0).getData();
+                    EcoState ecoState = (EcoState) output;
+
+                    String ftiXml = ecoState.getEcoContent();
+
+                    logger.info("ftiXml=" + (ftiXml==null?ftiXml:ftiXml.length()) );
 
                 }
             });
@@ -188,4 +148,3 @@ public class EcoFTIFlow {
         }
     }
 }
-*/
