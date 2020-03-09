@@ -72,10 +72,7 @@ public class EcoFTIFlow {
             EcoWorkflowHelper ecoWorkflowHelper = factory.getEcoWorkflowHelp( command );
             // We build our transaction.
             StateAndRef stateAndRef = ecoWorkflowHelper.getStateAndRef( refNo, getServiceHub() );
-            if ( stateAndRef != null ) {
-                ecoState = (EcoState) stateAndRef.getState().getData();
-            }
-            logger.info("stateAndRef=" + stateAndRef + " ecoState= " + ecoState );
+            logger.info("stateAndRef=" + stateAndRef );
 
             TransactionBuilder transactionBuilder = ecoWorkflowHelper.getTransactionBuilder( command, notary, stateAndRef, ecoState );
             logger.info("transactionBuilder=" + transactionBuilder );
@@ -83,7 +80,7 @@ public class EcoFTIFlow {
             // We check our transaction is valid based on its contracts.
             transactionBuilder.verify(getServiceHub());
 
-            FlowSession session = initiateFlow( ecoState.getVcc() );
+            FlowSession session = initiateFlow( vcc );
 
             // We sign the transaction with our private key, making it immutable.
             logger.info("Before signInitialTransaction()");

@@ -17,8 +17,8 @@ public class TestEcoWorkflowReplace extends TestEcoWorkflow {
     private static final Logger logger = LoggerFactory.getLogger( TestEcoWorkflowReplace.class);
 
     static EcoContract.Commands command;
-    static String refNo = "abcDEF1";
-    static String docNo = "abc123";
+    static String refNo = "abc";
+    static String docNo = "def";
     static String ecoContent = "abcDEF";
 
     public static void main(String[] args) throws ExecutionException, InterruptedException {
