@@ -2,6 +2,11 @@ package com.vcc.corda.eco.flow;
 
 import co.paralleluniverse.fibers.Suspendable;
 import com.google.common.collect.ImmutableList;
+import com.vcc.camelone.eco.exchange.ServiceStatus;
+import com.vcc.camelone.eco.exchange.gateway.IDispatch;
+import com.vcc.camelone.eco.exchange.gateway.impl.NTPGWDispatchServiceImpl;
+import com.vcc.camelone.eco.exchange.service.fti.impl.FTICoXchServiceImpl;
+import com.vcc.camelone.eco.exchange.source.fti.model.CertificateOfOrigin;
 import com.vcc.corda.eco.contract.EcoContract;
 import com.vcc.corda.eco.flow.helper.EcoWorkflowHelper;
 import com.vcc.corda.eco.flow.helper.EcoWorkflowHelperFactory;
@@ -145,11 +150,46 @@ public class EcoFTIFlow {
 
                 }
             });
+
+            List<TransactionState<ContractState>> transactionStateList = signedTransaction.getTx().getOutputs();
+
+            if( transactionStateList != null && transactionStateList.size() > 0 ) {
+
+                ContractState output = transactionStateList.get(0).getData();
+                EcoState ecoState = (EcoState) output;
+
+                String ftiXml = ecoState.getEcoContent();
+
+                String ublXML = this.convertFTI2UBL( ftiXml );
+
+                //call gateway;
+                IDispatch dispatch = new NTPGWDispatchServiceImpl();
+                ServiceStatus serviceStatus = dispatch.dispatchCO("abc",""+ System.nanoTime(), ublXML );
+                logger.info("serviceStatus=" + serviceStatus );
+            }
+
             logger.info("before ReceiveFinalityFlow()"  );
             subFlow(new ReceiveFinalityFlow(otherSide, signedTransaction.getId()));
             logger.info("end ReceiveFinalityFlow()"  );
 
             return null;
+        }
+
+        private String convertFTI2UBL( String ftiXml) throws FlowException {
+
+            logger.info("ftiXml=" + (ftiXml==null?ftiXml:ftiXml.length()) );
+
+            FTICoXchServiceImpl ecoXch = new FTICoXchServiceImpl();
+            try {
+                CertificateOfOrigin ftiCO = ecoXch.convertToObj( ftiXml );
+                String ublCOstr = ecoXch.convertToUblStr(ftiCO  );
+                logger.info("ublCOstr=" + (ublCOstr==null?ublCOstr:ublCOstr.length()) );
+                return ublCOstr;
+            } catch (Exception e) {
+                logger.error( "" + e.getMessage());
+                throw new FlowException(e);
+            }
+
         }
     }
 }

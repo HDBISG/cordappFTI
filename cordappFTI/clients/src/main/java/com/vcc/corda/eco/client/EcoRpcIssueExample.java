@@ -1,5 +1,8 @@
 package com.vcc.corda.eco.client;
 
+import com.vcc.camelone.eco.exchange.ServiceStatus;
+import com.vcc.camelone.eco.exchange.gateway.IDispatch;
+import com.vcc.camelone.eco.exchange.gateway.impl.NTPGWDispatchServiceImpl;
 import com.vcc.camelone.eco.exchange.service.fti.IFTI;
 import com.vcc.camelone.eco.exchange.service.fti.impl.FTICoXchServiceImpl;
 import com.vcc.camelone.eco.exchange.source.fti.model.CertificateOfOrigin;
@@ -10,6 +13,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
 
 public class EcoRpcIssueExample extends EcoRpc {
@@ -22,7 +26,7 @@ public class EcoRpcIssueExample extends EcoRpc {
         super( rpcEnity );
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         EcoRpcEnity rpcEnity = new EcoRpcEnity();
 
         rpcEnity.setRpcHost( "localhost:10005", "user1" , "test" );
@@ -40,14 +44,16 @@ public class EcoRpcIssueExample extends EcoRpc {
         try {
             CertificateOfOrigin ftiCO = ecoXch.convertToObj( ftiXml );
             ublCOstr = ecoXch.convertToUblStr(ftiCO  );
-            logger.info("ublCOstr=====" + (ublCOstr==null?ublCOstr:ublCOstr.length()) );
+            logger.info("ublCOstr==========================" + (ublCOstr==null?ublCOstr:ublCOstr.length()) );
             // logger.info("ublCOstr=" +  ublCOstr );
+            IDispatch dispatch = new NTPGWDispatchServiceImpl();
+            ServiceStatus serviceStatus = dispatch.dispatchCO("abc","doc1", ublCOstr );
 
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        new EcoRpcIssueExample( rpcEnity ).issueEco(docNo, ublCOstr );
+        // new EcoRpcIssueExample( rpcEnity ).issueEco(docNo, ftiXml );
     }
 
     //Read file content into string with - Files.lines(Path path, Charset cs)

@@ -45,4 +45,5 @@ dependencies {
 
     cordaCompile group:'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.1.4'
     cordaCompile group:'commons-io', name: 'commons-io', version: '2.5'
+    cordaCompile group:'org.glassfish.jersey.core', name: 'jersey-client', version: '2.25.1'
 }

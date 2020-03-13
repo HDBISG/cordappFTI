@@ -48,7 +48,7 @@ public class EcoContract implements Contract {
 
 
     public interface Commands extends CommandData {
-        class Issue implements Commands { }
+        class Issue extends TypeOnlyCommandData implements Commands { }
         class Replace extends TypeOnlyCommandData implements Commands{}
         class Cancel extends TypeOnlyCommandData implements Commands{}
     }

@@ -8,6 +8,7 @@ import com.vcc.corda.eco.state.EcoState;
 import net.corda.client.rpc.CordaRPCClient;
 import net.corda.client.rpc.CordaRPCClientConfiguration;
 import net.corda.client.rpc.CordaRPCConnection;
+import net.corda.core.concurrent.CordaFuture;
 import net.corda.core.contracts.StateAndRef;
 import net.corda.core.contracts.UniqueIdentifier;
 import net.corda.core.identity.CordaX500Name;
@@ -25,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import static net.corda.core.node.services.vault.QueryCriteriaUtils.getField;
 
@@ -65,7 +67,7 @@ public class EcoRpc {
         return partyB;
     }
 
-    public void issueEco( String docNo, String ecoXML ) {
+    public void issueEco( String docNo, String ecoXML ) throws Exception {
 
         logger.info("begin");
 
@@ -82,9 +84,15 @@ public class EcoRpc {
 
         try {
             FlowHandle<SignedTransaction> flowHandle = proxy.startFlowDynamic(EcoIssueFlowInitiator.class, ecoState);
-        }catch (Exception e) {
-            e.printStackTrace();
+            logger.info("flowHandle=" + flowHandle);
+            CordaFuture cordaFuture = flowHandle.getReturnValue();
+            Object obj = cordaFuture.get();
+            logger.info("obj=" + obj);
+        } catch ( Exception e ) {
+            logger.error("==========================================", e);
+            throw e;
         }
+
         logger.info(proxy.currentNodeTime().toString());
 
         connection.notifyServerAndClose();

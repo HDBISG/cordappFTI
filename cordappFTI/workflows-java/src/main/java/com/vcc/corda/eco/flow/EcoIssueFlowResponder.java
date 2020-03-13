@@ -3,6 +3,9 @@ package com.vcc.corda.eco.flow;
 import co.paralleluniverse.fibers.Suspendable;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.vcc.camelone.eco.exchange.ServiceStatus;
+import com.vcc.camelone.eco.exchange.gateway.IDispatch;
+import com.vcc.camelone.eco.exchange.gateway.impl.NTPGWDispatchServiceImpl;
 import com.vcc.camelone.eco.exchange.service.fti.IFTI;
 import com.vcc.camelone.eco.exchange.service.fti.impl.FTICoXchServiceImpl;
 import com.vcc.camelone.eco.exchange.source.fti.model.CertificateOfOrigin;
@@ -41,34 +44,42 @@ public class EcoIssueFlowResponder extends FlowLogic<Void> {
             @Override
             protected void checkTransaction(SignedTransaction stx) throws FlowException {
                 // Implement responder flow transaction checks here
-                requireThat(require -> {
+/*                requireThat(require -> {
                     ContractState output = stx.getTx().getOutputs().get(0).getData();
                     require.using("This must be an eco transaction.", output instanceof EcoState);
                     EcoState ecoState = (EcoState) output;
                     //require.using("I won't accept IOUs with a value over 100.", iou.getValue() <= 100);
                     logger.info("ecoState=" + ecoState );
                     return null;
-                });
+                });*/
+                ContractState output = stx.getTx().getOutputs().get(0).getData();
+                EcoState ecoState = (EcoState) output;
+
+                String ftiXml = ecoState.getEcoContent();
+
+                logger.info("ftiXml=" + (ftiXml==null?ftiXml:ftiXml.length()) );
+
+                FTICoXchServiceImpl ecoXch = new FTICoXchServiceImpl();
+                try {
+                    // convert to UBL2.1
+                    CertificateOfOrigin ftiCO = ecoXch.convertToObj( ftiXml );
+                    String ublCOstr = ecoXch.convertToUblStr(ftiCO  );
+                    logger.info("ublCOstr=" + (ublCOstr==null?ublCOstr:ublCOstr.length()) );
+
+                    //call gateway;
+                    IDispatch dispatch = new NTPGWDispatchServiceImpl();
+                    ServiceStatus serviceStatus = dispatch.dispatchCO("abc",ftiCO.getID() +"_" + System.nanoTime(), ublCOstr );
+                    logger.info("serviceStatus=" + serviceStatus );
+                } catch (Exception e) {
+                    logger.error( " ubl error " + e.getMessage());
+                    throw new FlowException(e);
+                }
             }
         });
         logger.info("before ReceiveFinalityFlow()"  );
         subFlow(new ReceiveFinalityFlow(otherSide, signedTransaction.getId()));
 
-        ContractState output = signedTransaction.getTx().getOutputs().get(0).getData();
-        EcoState ecoState = (EcoState) output;
-        String ftiXml = ecoState.getEcoContent();
 
-        logger.info("ftiXml=" + (ftiXml==null?ftiXml:ftiXml.length()) );
-
-        IFTI ecoXch = new FTICoXchServiceImpl();
-        try {
-            CertificateOfOrigin ftiCO = ecoXch.convertToObj( ftiXml );
-            String ublCOstr = ecoXch.convertToUblStr(ftiCO  );
-            logger.info("ublCOstr=" + (ublCOstr==null?ublCOstr:ublCOstr.length()) );
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
 
         logger.info("end ReceiveFinalityFlow()"  );
 

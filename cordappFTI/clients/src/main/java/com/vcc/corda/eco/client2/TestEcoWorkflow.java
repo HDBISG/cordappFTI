@@ -13,7 +13,12 @@ import net.corda.core.utilities.NetworkHostAndPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Stream;
 
 public class TestEcoWorkflow {
 
@@ -29,5 +34,21 @@ public class TestEcoWorkflow {
         final CordaRPCConnection connection = client.start( rpcUserName, rpcPassword );
 
         return connection;
+    }
+
+    protected static String getFileBody(String filePath)
+    {
+        StringBuilder contentBuilder = new StringBuilder();
+
+        try (Stream<String> stream = Files.lines( Paths.get(filePath), StandardCharsets.UTF_8))
+        {
+            stream.forEach(s -> contentBuilder.append(s).append("\n"));
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+
+        return contentBuilder.toString();
     }
 }

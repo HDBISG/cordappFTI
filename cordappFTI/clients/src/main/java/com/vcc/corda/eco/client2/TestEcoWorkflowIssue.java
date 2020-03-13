@@ -21,7 +21,7 @@ public class TestEcoWorkflowIssue extends TestEcoWorkflow {
 
     static EcoContract.Commands command;
     static String refNo;
-    static String docNo = "abc";
+    static String docNo = "abcdef";
     static String ecoContent = "abcDEF";
 
     public static void main(String[] args) throws ExecutionException, InterruptedException {
@@ -35,6 +35,7 @@ public class TestEcoWorkflowIssue extends TestEcoWorkflow {
 
             command = new EcoContract.Commands.Issue();
             refNo = "";
+            ecoContent = getFileBody("D:\\FTI\\Sample.xml");
 
             FlowHandle<SignedTransaction> flowHandle = proxy.startFlowDynamic( EcoFTIFlow.EcoFTIFlowInitiator.class,  command, refNo, docNo,  ecoContent);
             logger.info("flowHandle=" + flowHandle);

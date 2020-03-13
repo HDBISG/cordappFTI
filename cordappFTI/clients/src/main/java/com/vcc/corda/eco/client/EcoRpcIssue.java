@@ -1,14 +1,16 @@
 package com.vcc.corda.eco.client;
 
+import java.util.concurrent.ExecutionException;
+
 public class EcoRpcIssue extends EcoRpc {
 
-    static String docNo = "docNo123r";
+    static String docNo = "docNo123w";
 
     public EcoRpcIssue( EcoRpcEnity rpcEnity ){
         super( rpcEnity );
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         EcoRpcEnity rpcEnity = new EcoRpcEnity();
 
         rpcEnity.setRpcHost( "localhost:10005", "user1" , "test" );

@@ -59,6 +59,14 @@ dependencies {
 
     testImplementation "$corda_release_group:corda-node-driver:$corda_release_version"
     cordaRuntime "org.apache.logging.log4j:log4j-slf4j-impl:$log4j_version"
+    ///
+    cordaRuntime ('com.helger:ph-ubl21:6.1.1') {
+        exclude group: 'com.helger', module: 'ph-jaxb-pom'
+        exclude group: 'org.glassfish.jaxb', module: 'jaxb-bom'
+    }
+    cordaRuntime group:'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.1.4'
+    cordaRuntime group:'commons-io', name: 'commons-io', version: '2.5'
+    ///////////////
 
     // CorDapp dependencies.
     cordapp project(":contracts-java")

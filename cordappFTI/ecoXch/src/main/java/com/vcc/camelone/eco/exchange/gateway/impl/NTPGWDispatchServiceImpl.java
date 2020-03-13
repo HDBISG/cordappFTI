@@ -1,7 +1,7 @@
 /**
  * 
  */
-/*
+
 package com.vcc.camelone.eco.exchange.gateway.impl;
 
 import java.util.Optional;
@@ -16,17 +16,13 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
-import org.slf4j.ILoggerFactory;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Service;
+
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.vcc.camelone.com.dao.GenericDao;
-import com.vcc.camelone.config.model.TCoreSysparam;
+
 import com.vcc.camelone.eco.exchange.ServiceStatus;
 import com.vcc.camelone.eco.exchange.ServiceStatus.STATUS;
 import com.vcc.camelone.eco.exchange.gateway.IDispatch;
@@ -50,28 +46,19 @@ public class NTPGWDispatchServiceImpl implements IDispatch {
 	public final static String ECO_REPO = "ECO_REPO";
 	public final static String PUT_DOC_RETURN = "PUT_DOC_RETURN";
 
-	// Attributes
-	/////////////
-	@Autowired
-	@Qualifier("coreSystemParamDao")
-	protected GenericDao<TCoreSysparam, String> sysParamDao;
-
 
 
 	@Override
 	public ServiceStatus dispatchCO(String cosignee, String certNo, String xmlCO) {
 		// TODO Auto-generated method stub
-		log.debug("dispatchCO");
+		log.info("dispatchCO");
 		
 		ServiceStatus serviceStatus = new ServiceStatus();
 		try {
-			TCoreSysparam ntpGwUrl =  sysParamDao.find(NTP_GW_URL);
-			if (null == ntpGwUrl || null == ntpGwUrl.getSysVal() || ntpGwUrl.getSysVal().isEmpty()) 
-				throw new Exception ("NTP_GW_URL not defined");
-				
-			TCoreSysparam ntpGwRetWs =  sysParamDao.find(NTP_GW_RET_WS);
-			if (null == ntpGwRetWs || null == ntpGwRetWs.getSysVal() || ntpGwRetWs.getSysVal().isEmpty() ) 
-				throw new Exception ("NTP_GW_RET_WS not defined");
+
+
+			String ntpGwUrlStr = "http://smarteco-uat.vcargocloud.com:8081/GateWayPortal";
+			String ntpGwRetWsStr = "/gw-ntpreturn";
 		
 			NTPGWReturnRequest ntpGwReturnRequest = new NTPGWReturnRequest();
 			ntpGwReturnRequest.setDocType(ECO);
@@ -85,7 +72,7 @@ public class NTPGWDispatchServiceImpl implements IDispatch {
 			ntpGwReturnRequest.setRetReqType(PUT_DOC_RETURN);
 		
 			Client client = ClientBuilder.newClient();
-			WebTarget webTarget = client.target(ntpGwUrl.getSysVal()).path(ntpGwRetWs.getSysVal());
+			WebTarget webTarget = client.target( ntpGwUrlStr ).path( ntpGwRetWsStr );
 			ObjectMapper objectMapper = new ObjectMapper();
 			String sNtpGwReturnRequest = objectMapper.writeValueAsString(ntpGwReturnRequest);
 
@@ -117,8 +104,6 @@ public class NTPGWDispatchServiceImpl implements IDispatch {
 		}
 		log.info("----: dispatchCO :---");
 		return serviceStatus;
-		return null;
 	}
 
 }
-*/

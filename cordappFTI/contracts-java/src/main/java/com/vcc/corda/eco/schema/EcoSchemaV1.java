@@ -11,6 +11,8 @@ import java.util.UUID;
 
 /**
  * An ecoState schema.
+ * Caused by: org.h2.jdbc.JdbcSQLDataException: Value too long for column """ECO_CONTENT"" VARCHAR(255)": "STRINGDECODE('<?xml version=\""1.0\"" encoding=\""UTF-8\""?>\n<CertificateOfOrigin>\n\t<ID>ECO201912240601</ID>\n\t<UUID>ECO20191224... (4339)"; SQL statement:
+ * insert into eco_states (doc_no, eco_content, fti, linear_id, vcc, output_index, transaction_id) values (?, ?, ?, ?, ?, ?, ?) [22001-199]
  */
 public class EcoSchemaV1 extends MappedSchema {
     public EcoSchemaV1() {
@@ -23,14 +25,14 @@ public class EcoSchemaV1 extends MappedSchema {
 
         @Column(name = "fti") private final String fti;
         @Column(name = "vcc") private final String vcc;
-        @Column(name = "eco_content") private final String ecoContent;
+        //@Column(name = "eco_content") private final String ecoContent;
         @Column(name = "doc_no") private final String docNo;
         @Column(name = "linear_id") private final UUID linearId;
 
-        public PersistentEco(String fti, String vcc, String docNo, String ecoContent, UUID linearId) {
+        public PersistentEco(String fti, String vcc, String docNo,  UUID linearId) {
             this.fti = fti;
             this.vcc = vcc;
-            this.ecoContent = ecoContent;
+         //   this.ecoContent = ecoContent;
             this.docNo = docNo;
             this.linearId = linearId;
         }
@@ -39,7 +41,7 @@ public class EcoSchemaV1 extends MappedSchema {
         public PersistentEco() {
             this.fti = null;
             this.vcc = null;
-            this.ecoContent = null;
+        //    this.ecoContent = null;
             this.docNo = null;
             this.linearId = null;
         }
@@ -52,9 +54,9 @@ public class EcoSchemaV1 extends MappedSchema {
             return vcc;
         }
 
-        public String getEcoContent() {
+/*        public String getEcoContent() {
             return ecoContent;
-        }
+        }*/
 
         public String getDocNo() {
             return docNo;

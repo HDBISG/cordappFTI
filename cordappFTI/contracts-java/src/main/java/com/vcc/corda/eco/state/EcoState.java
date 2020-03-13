@@ -85,7 +85,6 @@ public class EcoState implements LinearState, QueryableState {
                     this.fti.getName().toString(),
                     this.vcc.getName().toString(),
                     this.docNo,
-                    this.ecoContent,
                     this.linearId.getId() );
         } else {
             throw new IllegalArgumentException("Unrecognised schema $schema");
